@@ -8,170 +8,229 @@
 #include <iostream>
 using namespace std;
 
-DSU::DSU(int n) : parent(n), rank(n, 0) {
-    for (int i = 0; i < n; ++i) parent[i] = i;
+EdgeVec::EdgeVec(int c): size(0), capacity(c) {
+    data = new Edge[capacity];
+}
+EdgeVec::~EdgeVec() {
+    delete []data;
+}
+void EdgeVec::pushBack(Edge e) {
+    if (size == capacity) resize();
+    data[size] = e;
+    ++size;
+}
+Edge* EdgeVec::getEdge() const{
+    return data;
+}
+int EdgeVec::getSize() const{
+    return size;
+}
+void EdgeVec::resize(){
+    capacity *= 2;
+    Edge* newEdge = new Edge[capacity];
+    for (int i = 0; i < size; ++i) newEdge[i] = data[i];
+    delete []data;
+    data = newEdge;
 }
 
-int DSU::find(int x) {
-    return parent[x] == x ? x : parent[x] = find(parent[x]);
+BoolVec::BoolVec(int c): size(0), capacity(c) {
+    data = new bool[capacity];
+}
+BoolVec::~BoolVec() {
+    delete []data;
+}
+void BoolVec::pushBack(bool b) {
+    if (size == capacity) resize();
+    data[size] = b;
+    ++size;
+}
+bool* BoolVec::getEdge() const{
+    return data;
+}
+int BoolVec::getSize() const{
+    return size;
+}
+void BoolVec::resize(){
+    capacity *= 2;
+    bool* newbool = new bool[capacity];
+    for (int i = 0; i < size; ++i) newbool[i] = data[i];
+    delete []data;
+    data = newbool;
 }
 
-bool DSU::unite(int x, int y) {
-    int xr = find(x), yr = find(y);
-    if (xr == yr) return false;
-    if (rank[xr] < rank[yr]) parent[xr] = yr;
-    else {
-        parent[yr] = xr;
-        if (rank[xr] == rank[yr]) rank[xr]++;
-    }
-    return true;
-}
-
-CBSolver::CBSolver(bool isDirected, int nodeCount, int edgeCount)
-    : directed(isDirected), n(nodeCount), m(edgeCount) {}
-
-void CBSolver::addEdge(int u, int v, int w, set<pair<int, int>>& edge_seen) {
-    if (directed) {
-        edges.push_back({u, v, w});
-    }
-    else {
-        auto key = minmax(u, v);
-        if (!edge_seen.count(key)) {
-            edge_seen.insert(key);
-            edges.push_back({u, v, w});
-        }
-    }
-}
-
-// DFS cycle detection for directed graphs
-// color: 0=white, 1=gray, 2=black
-bool CBSolver::hasCycleDFS(int u, vector<vector<int>>& adj, vector<int>& color) {
-    color[u] = 1; // gray
-    for (int v : adj[u]) {
-        if (color[v] == 1) return true; // back edge found
-        if (color[v] == 0 && hasCycleDFS(v, adj, color)) return true; // cycle in neighbors
-    }
-    color[u] = 2; // black
-    return false;
-}
-
-bool CBSolver::hasDirectedCycle(vector<vector<int>>& adj) {
-    vector<int> color(n, 0);
+CBSolver::CBSolver(int n, int m, Edge* edges, bool directed)
+    : n(n), m(m), directed(directed), edges(edges)
+{
+    adjList = new Node*[n];
     for (int i = 0; i < n; ++i) {
-        if (color[i] == 0 && hasCycleDFS(i, adj, color)) {
-            return true;
+        adjList[i] = nullptr;
+    }
+}
+
+CBSolver::~CBSolver() {
+    for (int i = 0; i < n; ++i) {
+        Node* curr = adjList[i];
+        while (curr) {
+            Node* temp = curr;
+            curr = curr->next;
+            delete temp;
         }
     }
+    delete[] adjList;
+}
+
+void CBSolver::process(std::ofstream& fout){
+    if (directed) handleDirected(fout);
+    else handleUndirected(fout);
+}
+
+int CBSolver::findRoot(DS ds[], int i) {
+    if (ds[i].parent != i) ds[i].parent = findRoot(ds, ds[i].parent); // path compression
+    return ds[i].parent;
+}
+
+void CBSolver::unionDS(DS ds[], int a, int b){
+    int root_a = findRoot(ds, a);
+    int root_b = findRoot(ds, b);
+
+    // union by rank
+    if (ds[root_a].rank > ds[root_b].rank) ds[root_b].parent = root_a;
+    else if (ds[root_a].rank < ds[root_b].rank) ds [root_a].parent = root_b;
+    else {
+        ds[root_a].parent = root_b;
+        ++ds[root_b].rank;
+    }
+}
+
+void CBSolver::addAdjEdge(int u, int v, int w) {
+    Node* node = new Node;
+    node->data = v;
+    node->weight = w;
+    node->next = adjList[u];
+    adjList[u] = node;
+}
+
+void CBSolver::deleteEdge(int u){
+    Node* temp = adjList[u];
+    adjList[u] = adjList[u]->next;
+    delete temp;
+}
+
+bool CBSolver::DFS(int u, bool checked[], bool stack[]){
+    checked[u] = true;
+    stack[u] = true;
+    for (Node* temp = adjList[u]; temp; temp = temp->next) {
+        int v = temp->data;
+        if (!checked[v]) {
+            if (DFS(v, checked, stack)) return true;
+        }
+        else if (stack[v]) return true; // back edge → cycle
+    }
+    stack[u] = false;
     return false;
 }
 
-void CBSolver::solveUndirected(ofstream& fout) {
-    // Fast Maximum Spanning Forest approach
-    sort(edges.begin(), edges.end());
-    
-    DSU dsu(n);
-    int totalRemovedWeight = 0;
-    vector<Edge> removedEdges;
-    removedEdges.reserve(edges.size()); // Pre-allocate for efficiency
-    
-    // Process edges from highest weight to lowest (reverse order)
-    for (int i = edges.size() - 1; i >= 0; i--) {
-        int u = edges[i].u;
-        int v = edges[i].v;
-        
-        if (dsu.unite(u, v)) {
-            // Edge is part of MSF, keep it
-        } else {
-            // Edge creates cycle in undirected graph, remove it
-            removedEdges.push_back(edges[i]);
-            totalRemovedWeight += edges[i].w;
+bool CBSolver::findCycle(){
+    bool* checked = new bool[n];
+    bool* stack = new bool[n];
+
+    for (int i = 0; i < n; ++i) {
+        checked[i] = false;
+        stack[i] = false;
+    }
+
+    for (int i = 0; i < n; ++i) {
+        if (!checked[i]) {
+            if (DFS(i, checked, stack)){
+                delete []checked;
+                delete []stack;
+                return true; // a back edge
+            }
         }
     }
-    
-    // Output results
-    if (removedEdges.empty()) {
-        fout << "0\n";
-    } else {
-        fout << totalRemovedWeight << "\n";
-        for (const auto& e : removedEdges) {
-            fout << e.u << " " << e.v << " " << e.w << "\n";
-        }
-    }
+    delete []checked;
+    delete []stack;
+    return false;
 }
 
-void CBSolver::solveDirected(ofstream& fout) {
-    
-    // Use undirected MST to get initial candidate edges to remove
-    sort(edges.begin(), edges.end());
-    
-    DSU dsu(n);
-    vector<Edge> candidateRemove;
-    vector<vector<int>> adjList(n);
-    int totalWeight = 0;
-    
-    for (int i = m - 1; i >= 0; i--) {
+void CBSolver::handleUndirected(std::ofstream& fout){
+    std::sort(edges, edges + m, [](const Edge& a, const Edge& b) {
+        return a.w < b.w;
+    });
+    DS* ds = new DS[n];
+    for (int i = 0; i < n; ++i) ds[i] = {i, 0};
+    int total = 0;
+    EdgeVec ev(n);
+
+    for (int i = m - 1; i >= 0; --i){
         int u = edges[i].u;
         int v = edges[i].v;
-        
-        if (dsu.unite(u, v)) {
-            // Add to directed graph
-            adjList[u].push_back(v);
+        int u_root = findRoot(ds, u);
+        int v_root = findRoot(ds, v);
+        if (u_root != v_root){
+            unionDS(ds, u_root, v_root);
         }
         else {
-            // Candidate for removal
-            candidateRemove.push_back(edges[i]);
-            totalWeight += edges[i].w;
+            ev.pushBack(edges[i]);
+            total += edges[i].w;
         }
     }
-    
-    // Try to add back candidate edges in descending weight order
-    // Sort candidates by weight in descending order
-    sort(candidateRemove.rbegin(), candidateRemove.rend());
-    
-    vector<Edge> finalRemove;
-    
-    for (const auto& edge : candidateRemove) {
-        if (edge.w < 0) {
-            // Skip negative weight edges
-            finalRemove.push_back(edge);
+
+    fout << total << "\n";
+    for (int i = 0; i < ev.getSize(); ++i){
+        fout << ev.getEdge()[i].u << " " << ev.getEdge()[i].v << " " << ev.getEdge()[i].w << "\n";
+    }
+
+    delete []ds;
+}
+
+void CBSolver::handleDirected(std::ofstream& fout) {
+    std::sort(edges, edges + m, [](const Edge& a, const Edge& b) {
+        return a.w < b.w;
+    });
+
+    DS* ds = new DS[n];
+    for (int i = 0; i < n; ++i) ds[i] = {i, 0};
+
+    int total = 0;
+    EdgeVec forDS(n);
+    EdgeVec remain(n);
+
+    for (int i = m - 1; i >= 0; --i) {
+        int u = edges[i].u, v = edges[i].v;
+        if (findRoot(ds, u) != findRoot(ds, v)) {
+            unionDS(ds, u, v);
+            addAdjEdge(u, v, edges[i].w);
+        }
+        else {
+            forDS.pushBack(edges[i]);
+            total += edges[i].w;
+        }
+    }
+
+    for (int i = 0; i < forDS.getSize(); ++i) {
+        Edge e = forDS.getEdge()[i];
+        if (e.w < 0) {
+            remain.pushBack(e);
             continue;
         }
-        
-        int u = edge.u;
-        int v = edge.v;
-        
-        // Try adding this edge
-        adjList[u].push_back(v);
-        
-        if (hasDirectedCycle(adjList)) {
-            // Creates cycle, remove it
-            adjList[u].pop_back();
-            finalRemove.push_back(edge);
-        }
-        else {
-            // No cycle, can keep it
-            totalWeight -= edge.w;
-        }
-    }
-    
-    int finalTotalWeight = 0;
-    for (const auto& e : finalRemove) {
-        finalTotalWeight += e.w;
-    }
-    
-    if (finalRemove.empty()) fout << "0\n";
-    else {
-        fout << finalTotalWeight << "\n";
-        for (const auto& e : finalRemove) {
-            fout << e.u << " " << e.v << " " << e.w << "\n";
-        }
-    }
-}
 
-void CBSolver::process(ofstream& fout) {
-    if (directed) {
-        solveDirected(fout);
-    } else {
-        solveUndirected(fout);
+        addAdjEdge(e.u, e.v, e.w);
+        if (findCycle()) {
+            deleteEdge(e.u);
+            remain.pushBack(e);
+        }
+        else total -= e.w;
     }
+
+    fout << total << "\n";
+    for (int i = 0; i < remain.getSize(); ++i) {
+        Edge e = remain.getEdge()[i];
+        fout << e.u << " " << e.v << " " << e.w << "\n";
+    }
+
+    for (int i = 0; i < n; ++i)
+        while (adjList[i]) deleteEdge(i);
+
+    delete[] ds;
 }

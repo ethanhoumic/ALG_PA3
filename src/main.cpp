@@ -61,16 +61,16 @@ int main(int argc, char* argv[]) {
         int n, m;
         fin >> n >> m;
 
-        CBSolver cb(directed, n, m);
-        set<pair<int, int>> edge_seen;
-
+        Edge* edges = new Edge[m];
         for (int i = 0; i < m; ++i) {
-            int u, v, w;
-            fin >> u >> v >> w;
-            cb.addEdge(u, v, w, edge_seen);
+            cout << "Reading edge " << i + 1 << " of " << m << "\n"; // Debug output
+            fin >> edges[i].u >> edges[i].v >> edges[i].w;
         }
 
+        CBSolver cb(n, m, edges, directed);
         cb.process(fout);
+
+        delete []edges;
     }
 
     tmusg.getPeriodUsage(stat);

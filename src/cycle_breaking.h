@@ -11,42 +11,70 @@
 #include <fstream>
 using namespace std;
 
-struct Edge {
+struct Node{
+    int data, weight;
+    Node* next;
+};
+
+struct Edge{
     int u, v, w;
-    bool operator<(const Edge& other) const {
-        return w < other.w;
-    }
 };
 
 // Disjoint Set
-class DSU {
-    std::vector<int> parent, rank;
+struct DS {
+    int parent, rank;
+};
+
+class EdgeVec{
 public:
-    DSU(int n);
-    int find(int x);
-    bool unite(int x, int y);
+    EdgeVec(int c);
+    ~EdgeVec();
+    void pushBack(Edge e);
+    Edge* getEdge() const;
+    int getSize() const;
+private:
+    void resize();
+    Edge* data;
+    int size, capacity;
+};
+
+class BoolVec{
+public:
+    BoolVec(int c);
+    ~BoolVec();
+    void pushBack(bool b);
+    bool* getEdge() const;
+    int getSize() const;
+private:
+    void resize();
+    bool* data;
+    int size, capacity;
 };
 
 class CBSolver {
+public:
+    CBSolver(int n, int m, Edge* edges, bool directed);
+    ~CBSolver();
+    void process(std::ofstream& fout);
 private:
     bool directed;
     int n, m;
-    vector<Edge> edges;
-    
-    // For directed graph cycle detection
-    bool hasCycleDFS(int u, vector<vector<int>>& adj, vector<int>& color);
-    bool hasDirectedCycle(vector<vector<int>>& adj);
-    
-    // Directed case
-    void solveDirected(ofstream& fout);
-    
-    // Undirected case
-    void solveUndirected(ofstream& fout);
+    Edge* edges;
+    Node** adjList;
 
-public:
-    CBSolver(bool isDirected, int nodeCount, int edgeCount);
-    void addEdge(int u, int v, int w, set<pair<int, int>>& edge_seen);
-    void process(ofstream& fout);
+    // Union-Find
+    int findRoot(DS ds[], int i);
+    void unionDS(DS ds[], int a, int b);
+
+    // Graph functions
+    void addAdjEdge(int u, int v, int w);
+    void deleteEdge(int u);
+    bool findCycle();
+    bool DFS(int u, bool visited[], bool stack[]);
+
+    // Kruskal algs
+    void handleUndirected(std::ofstream& fout);
+    void handleDirected(std::ofstream& fout);
 };
 
 #endif

@@ -10,7 +10,7 @@ set<pair<int, int>> undirectedEdgeSet;
 
 void generateUndirected(const string& filename) {
     int n = 10000;
-    long long m = 50000000;
+    long long m = 500000;
     ofstream fout(filename);
     fout << "u\n";  // 無向圖
 
@@ -54,7 +54,7 @@ void generateDirected(const string& filename) {
         if (u == v) continue;
         auto p = make_pair(u, v);
         if (seen.insert(p).second) {
-            cout << "Adding edge: " << u << " " << v << "\n"; // Debug output
+            if (seen.size() % 1000 == 0) cout << "Adding edge: " << u << " " << v << "\n"; // Debug output
             fout << u << " " << v << " " << wdist(rng) << "\n";
         }
     }
@@ -63,7 +63,7 @@ void generateDirected(const string& filename) {
 }
 
 int main() {
-    // generateUndirected("../inputs/undirected_max.in");
-    generateDirected("../inputs/directed_max.in");
+    generateUndirected("inputs/undirected.in");
+    generateDirected("inputs/directed.in");
     return 0;
 }

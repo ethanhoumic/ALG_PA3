@@ -21,6 +21,12 @@ void helpMessage(int errorCode) {
         case 0:
             cout << "Error: incorrect number of arguments.\n";
             break;
+        case 1:
+            cout << "Error: input file format error.\n";
+            break;
+        case 6:
+            cout << "Error: cannot open output file.\n";
+            break;
         default:
             cout << "Error: unknown error.\n";
     }
@@ -54,10 +60,6 @@ int main(int argc, char* argv[]) {
         bool directed = (type == "d");
         int n, m;
         fin >> n >> m;
-        if (!fin) {
-            helpMessage(3);
-            return EXIT_FAILURE;
-        }
 
         CBSolver cb(directed, n, m);
         set<pair<int, int>> edge_seen;
@@ -65,10 +67,6 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < m; ++i) {
             int u, v, w;
             fin >> u >> v >> w;
-            if (!fin) {
-                helpMessage(4);
-                return EXIT_FAILURE;
-            }
             cb.addEdge(u, v, w, edge_seen);
         }
 

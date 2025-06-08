@@ -9,14 +9,16 @@
 #include <vector>
 #include <set>
 #include <fstream>
+using namespace std;
 
 struct Edge {
     int u, v, w;
     bool operator<(const Edge& other) const {
-        return w > other.w;
+        return w < other.w;
     }
 };
 
+// Disjoint Set
 class DSU {
     std::vector<int> parent, rank;
 public:
@@ -26,16 +28,25 @@ public:
 };
 
 class CBSolver {
+private:
     bool directed;
     int n, m;
-    std::vector<Edge> edges;
-
-    bool hasCycleDFS(int u, std::vector<std::vector<int>>& adj, std::vector<bool>& visited, std::vector<bool>& recStack);
-    bool wouldFormCycle(int u, int v, int n, std::vector<std::vector<int>>& adj);
+    vector<Edge> edges;
+    
+    // For directed graph cycle detection
+    bool hasCycleDFS(int u, vector<vector<int>>& adj, vector<int>& color);
+    bool hasDirectedCycle(vector<vector<int>>& adj);
+    
+    // Directed case
+    void solveDirected(ofstream& fout);
+    
+    // Undirected case
+    void solveUndirected(ofstream& fout);
 
 public:
     CBSolver(bool isDirected, int nodeCount, int edgeCount);
-    void addEdge(int u, int v, int w, std::set<std::pair<int, int>>& edge_seen);
-    void process(std::ofstream& fout);
+    void addEdge(int u, int v, int w, set<pair<int, int>>& edge_seen);
+    void process(ofstream& fout);
 };
+
 #endif

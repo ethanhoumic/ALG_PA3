@@ -24,7 +24,7 @@ void helpMessage(int errorCode) {
         case 1:
             cout << "Error: input file format error.\n";
             break;
-        case 6:
+        case 2:
             cout << "Error: cannot open output file.\n";
             break;
         default:
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
 
     ofstream fout(argv[2]);
     if (!fout) {
-        helpMessage(6);
+        helpMessage(2);
         return EXIT_FAILURE;
     }
 
@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
         }
 
         CBSolver cb(n, m, edges, directed);
-        cb.process(fout);
+        cb.solve(fout);
 
         delete []edges;
     }

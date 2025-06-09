@@ -55,11 +55,11 @@ class CBSolver {
 public:
     CBSolver(int n, int m, Edge* edges, bool directed);
     ~CBSolver();
-    void process(std::ofstream& fout);
+    void solve(std::ofstream& fout);
 private:
     bool directed;
     int n, m;
-    int update;
+    //int update;
     Edge* edges;
     Node** adjList;
 

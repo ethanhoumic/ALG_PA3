@@ -59,7 +59,7 @@ void BoolVec::resize(){
 }
 
 CBSolver::CBSolver(int n, int m, Edge* edges, bool directed)
-    : n(n), m(m), directed(directed), edges(edges), update(0){
+    : n(n), m(m), directed(directed), edges(edges){
     adjList = new Node*[n];
     for (int i = 0; i < n; ++i) {
         adjList[i] = nullptr;
@@ -78,7 +78,7 @@ CBSolver::~CBSolver() {
     delete[] adjList;
 }
 
-void CBSolver::process(std::ofstream& fout){
+void CBSolver::solve(std::ofstream& fout){
     if (directed) handleDirected(fout);
     else handleUndirected(fout);
 }
@@ -130,26 +130,21 @@ bool CBSolver::DFS(int u, bool checked[], bool stack[]){
 }
 
 bool CBSolver::findCycle(){
-    bool* checked = new bool[n];
-    bool* stack = new bool[n];
-
-    for (int i = 0; i < n; ++i) {
-        checked[i] = false;
-        stack[i] = false;
-    }
+    bool* checked = new bool[n]{};
+    bool* stack = new bool[n]{};
+    bool hasCycle = false;
 
     for (int i = 0; i < n; ++i) {
         if (!checked[i]) {
             if (DFS(i, checked, stack)){
-                delete []checked;
-                delete []stack;
-                return true; // a back edge
+                hasCycle = true; // a back edge
+                break;
             }
         }
     }
     delete []checked;
     delete []stack;
-    return false;
+    return hasCycle;
 }
 
 void CBSolver::handleUndirected(std::ofstream& fout){
@@ -210,13 +205,14 @@ void CBSolver::handleDirected(std::ofstream& fout) {
     for (int i = 0; i < forDS.getSize(); ++i) {
         Edge e = forDS.getEdge()[i];
         if (e.w < 0) {
+            // update++;
             remain.pushBack(e);
             continue;
         }
 
         addAdjEdge(e.u, e.v, e.w);
         if (findCycle()) {
-            update++;
+            //update++;
             deleteEdge(e.u);
             remain.pushBack(e);
         }
@@ -228,6 +224,6 @@ void CBSolver::handleDirected(std::ofstream& fout) {
         Edge e = remain.getEdge()[i];
         fout << e.u << " " << e.v << " " << e.w << "\n";
     }
-    cout << "Total update: " << update << "\n"; // Debug output
+    // cout << "Total update: " << update << "\n"; // Debug output
     delete[] ds;
 }

@@ -37,8 +37,8 @@ void generateUndirected(const string& filename) {
 }
 
 void generateDirected(const string& filename) {
-    int n = 5000;
-    int m = 10000;
+    int n = 50;
+    int m = 100;
     ofstream fout(filename);
     fout << "d\n";  // 有向圖
 
@@ -63,7 +63,7 @@ void generateDirected(const string& filename) {
 }
 
 int main() {
-    generateUndirected("inputs/undirected.in");
+    // generateUndirected("inputs/undirected.in");
     generateDirected("inputs/directed.in");
     return 0;
 }

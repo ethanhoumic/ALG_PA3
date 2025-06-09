@@ -59,8 +59,7 @@ void BoolVec::resize(){
 }
 
 CBSolver::CBSolver(int n, int m, Edge* edges, bool directed)
-    : n(n), m(m), directed(directed), edges(edges)
-{
+    : n(n), m(m), directed(directed), edges(edges), update(0){
     adjList = new Node*[n];
     for (int i = 0; i < n; ++i) {
         adjList[i] = nullptr;
@@ -217,6 +216,7 @@ void CBSolver::handleDirected(std::ofstream& fout) {
 
         addAdjEdge(e.u, e.v, e.w);
         if (findCycle()) {
+            update++;
             deleteEdge(e.u);
             remain.pushBack(e);
         }
@@ -228,9 +228,6 @@ void CBSolver::handleDirected(std::ofstream& fout) {
         Edge e = remain.getEdge()[i];
         fout << e.u << " " << e.v << " " << e.w << "\n";
     }
-
-    for (int i = 0; i < n; ++i)
-        while (adjList[i]) deleteEdge(i);
-
+    cout << "Total update: " << update << "\n"; // Debug output
     delete[] ds;
 }

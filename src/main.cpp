@@ -63,7 +63,6 @@ int main(int argc, char* argv[]) {
 
         Edge* edges = new Edge[m];
         for (int i = 0; i < m; ++i) {
-            cout << "Reading edge " << i + 1 << " of " << m << "\n"; // Debug output
             fin >> edges[i].u >> edges[i].v >> edges[i].w;
         }
 

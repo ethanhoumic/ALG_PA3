@@ -59,6 +59,7 @@ public:
 private:
     bool directed;
     int n, m;
+    int update;
     Edge* edges;
     Node** adjList;
 

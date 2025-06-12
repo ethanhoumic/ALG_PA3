@@ -9,8 +9,8 @@ using namespace std;
 set<pair<int, int>> undirectedEdgeSet;
 
 void generateUndirected(const string& filename) {
-    int n = 100000;
-    long long m = 10000000;
+    int n = 80000;
+    long long m = 1000000;
     ofstream fout(filename);
     fout << "u\n";  // 無向圖
 

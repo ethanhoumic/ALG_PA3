@@ -62,10 +62,11 @@ private:
     //int update;
     Edge* edges;
     Node** adjList;
+    DS* ds;
 
     // Union-Find
-    int findRoot(DS ds[], int i);
-    void unionDS(DS ds[], int a, int b);
+    int findRoot(int i);
+    void unionDS(int a, int b);
 
     // Graph functions
     void addAdjEdge(int u, int v, int w);
@@ -74,8 +75,8 @@ private:
     bool DFS(int u, bool visited[], bool stack[]);
 
     // Kruskal algs
-    void handleUndirected(std::ofstream& fout);
-    void handleDirected(std::ofstream& fout);
+    void solveUndirected(std::ofstream& fout);
+    void solveDirected(std::ofstream& fout);
 };
 
 #endif

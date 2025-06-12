@@ -110,9 +110,10 @@ void CBSolver::addAdjEdge(int u, int v, int w) {
 }
 
 void CBSolver::deleteEdge(int u){
-    Node* temp = adjList[u];
+    if (adjList[u] == nullptr) return;
+    Node* node = adjList[u];
     adjList[u] = adjList[u]->next;
-    delete temp;
+    delete node;
 }
 
 bool CBSolver::DFS(int u, bool checked[], bool stack[]){
@@ -148,12 +149,12 @@ bool CBSolver::findCycle(){
 }
 
 void CBSolver::handleUndirected(std::ofstream& fout){
-    std::sort(edges, edges + m, [](const Edge& a, const Edge& b) {
-        return a.w < b.w;
+    std::sort(edges, edges + m, [](const Edge& lhs, const Edge& rhs) {
+        return lhs.w < rhs.w;
     });
     DS* ds = new DS[n];
     for (int i = 0; i < n; ++i) ds[i] = {i, 0};
-    int total = 0;
+    long long int total = 0;
     EdgeVec ev(n);
 
     for (int i = m - 1; i >= 0; --i){
@@ -179,14 +180,14 @@ void CBSolver::handleUndirected(std::ofstream& fout){
 }
 
 void CBSolver::handleDirected(std::ofstream& fout) {
-    std::sort(edges, edges + m, [](const Edge& a, const Edge& b) {
-        return a.w < b.w;
+    std::sort(edges, edges + m, [](const Edge& lhs, const Edge& rhs) {
+        return lhs.w < rhs.w;
     });
 
     DS* ds = new DS[n];
     for (int i = 0; i < n; ++i) ds[i] = {i, 0};
 
-    int total = 0;
+    long long int total = 0;
     EdgeVec forDS(n);
     EdgeVec remain(n);
 

@@ -6,34 +6,10 @@
 #include "cycle_breaking.h"
 #include <algorithm>
 #include <iostream>
+#include <utility>
 using namespace std;
 
-EdgeVec::EdgeVec(int c): size(0), capacity(c) {
-    data = new Edge[capacity];
-}
-EdgeVec::~EdgeVec() {
-    delete []data;
-}
-void EdgeVec::pushBack(Edge e) {
-    if (size == capacity) resize();
-    data[size] = e;
-    ++size;
-}
-Edge* EdgeVec::getEdge() const{
-    return data;
-}
-int EdgeVec::getSize() const{
-    return size;
-}
-void EdgeVec::resize(){
-    capacity *= 2;
-    Edge* newEdge = new Edge[capacity];
-    for (int i = 0; i < size; ++i) newEdge[i] = data[i];
-    delete []data;
-    data = newEdge;
-}
-
-CBSolver::CBSolver(int n, int m, Edge* edges, bool directed)
+CBSolver::CBSolver(int n, int m, vector <pair<pair<int, int>, int>> edges, bool directed)
     : n(n), m(m), directed(directed), edges(edges){
     adjList = new Node*[n];
     for (int i = 0; i < n; ++i) {
@@ -123,73 +99,74 @@ bool CBSolver::findCycle(){
 }
 
 void CBSolver::solveUndirected(std::ofstream& fout){
-    sort(edges, edges + m, [](const Edge& lhs, const Edge& rhs) {
-        return lhs.w < rhs.w;
+    sort(edges.begin(), edges.end(), [](const pair<pair<int, int>, int>& lhs, const pair<pair<int, int>, int>& rhs) {
+        return lhs.second > rhs.second;
     });
     long long int total = 0;
-    EdgeVec ev(n);
+    vector <pair<pair<int, int>, int>> ev; // <<u, v>, w>
 
-    for (int i = m - 1; i >= 0; --i){
-        int u = edges[i].u;
-        int v = edges[i].v;
+    for (int i = 0; i < m; ++i){
+        int u = edges[i].first.first;
+        int v = edges[i].first.second;
         int u_root = findRoot(u);
         int v_root = findRoot(v);
         if (u_root != v_root){
             unionDS(u_root, v_root);
         }
         else {
-            ev.pushBack(edges[i]);
-            total += edges[i].w;
+            ev.push_back({{u, v}, edges[i].second});
+            total += edges[i].second;
         }
     }
-    fout << total << "\n";
-    for (int i = 0; i < ev.getSize(); ++i){
-        fout << ev.getEdge()[i].u << " " << ev.getEdge()[i].v << " " << ev.getEdge()[i].w << "\n";
+    fout << total << endl;
+    for (int i = 0; i < ev.size(); ++i){
+        pair<pair<int, int>, int> e = ev[i];
+        fout << e.first.first << " " << e.first.second << " " << e.second << endl;
     }
 }
 
 void CBSolver::solveDirected(std::ofstream& fout) {
-    sort(edges, edges + m, [](const Edge& lhs, const Edge& rhs) {
-        return lhs.w < rhs.w;
+    sort(edges.begin(), edges.end(), [](const pair<pair<int, int>, int>& lhs, const pair<pair<int, int>, int>& rhs) {
+        return lhs.second > rhs.second;
     });
 
     long long int total = 0;
-    EdgeVec forDS(n);
-    EdgeVec remove(n);
+    vector <pair<pair<int, int>, int>> forDS; // <<u, v>, w>
+    vector <pair<pair<int, int>, int>> remove; // <<u, v>, w>
 
-    for (int i = m - 1; i >= 0; --i) {
-        int u = edges[i].u, v = edges[i].v;
+    for (int i = 0; i < m; ++i) {
+        int u = edges[i].first.first, v = edges[i].first.second, w = edges[i].second;
         if (findRoot(u) != findRoot(v)) {
             unionDS(u, v);
-            addAdjEdge(u, v, edges[i].w);
+            addAdjEdge(u, v, w);
         }
         else {
-            forDS.pushBack(edges[i]);
-            total += edges[i].w;
+            forDS.push_back({{u, v}, w});
+            total += w;
         }
     }
 
-    for (int i = 0; i < forDS.getSize(); ++i) {
-        Edge e = forDS.getEdge()[i];
-        if (e.w < 0) {
+    for (int i = 0; i < forDS.size(); ++i) {
+        pair<pair<int, int>, int> e = forDS[i];
+        if (e.second < 0) {
             // update++;
-            remove.pushBack(e);
+            remove.push_back(e);
             continue;
         }
 
-        addAdjEdge(e.u, e.v, e.w);
+        addAdjEdge(e.first.first, e.first.second, e.second);
         if (findCycle()) {
             //update++;
-            deleteEdge(e.u);
-            remove.pushBack(e);
+            deleteEdge(e.first.first);
+            remove.push_back(e);
         }
-        else total -= e.w;
+        else total -= e.second;
     }
 
     fout << total << endl;
-    for (int i = 0; i < remove.getSize(); ++i) {
-        Edge e = remove.getEdge()[i];
-        fout << e.u << " " << e.v << " " << e.w << endl;
+    for (int i = 0; i < remove.size(); ++i) {
+        pair<pair<int, int>, int> e = remove[i];
+        fout << e.first.first << " " << e.first.second << " " << e.second << endl;
     }
     // cout << "Total update: " << update << "\n"; // Debug output
 }

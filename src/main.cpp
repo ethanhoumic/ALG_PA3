@@ -61,15 +61,16 @@ int main(int argc, char* argv[]) {
         int n, m;
         fin >> n >> m;
 
-        Edge* edges = new Edge[m];
+        vector<pair<pair<int, int>, int>> edges;
+        int u, v, w;
         for (int i = 0; i < m; ++i) {
-            fin >> edges[i].u >> edges[i].v >> edges[i].w;
+            fin >> u >> v >> w;
+            edges.push_back({{u, v}, w});
         }
 
         CBSolver cb(n, m, edges, directed);
         cb.solve(fout);
 
-        delete []edges;
     }
 
     tmusg.getPeriodUsage(stat);

@@ -25,42 +25,16 @@ struct DS {
     int parent, rank;
 };
 
-class EdgeVec{
-public:
-    EdgeVec(int c);
-    ~EdgeVec();
-    void pushBack(Edge e);
-    Edge* getEdge() const;
-    int getSize() const;
-private:
-    void resize();
-    Edge* data;
-    int size, capacity;
-};
-
-class BoolVec{
-public:
-    BoolVec(int c);
-    ~BoolVec();
-    void pushBack(bool b);
-    bool* getEdge() const;
-    int getSize() const;
-private:
-    void resize();
-    bool* data;
-    int size, capacity;
-};
-
 class CBSolver {
 public:
-    CBSolver(int n, int m, Edge* edges, bool directed);
+    CBSolver(int n, int m, vector <pair<pair<int, int>, int>> edges, bool directed);
     ~CBSolver();
     void solve(std::ofstream& fout);
 private:
     bool directed;
     int n, m;
     //int update;
-    Edge* edges;
+    vector <pair<pair<int, int>, int>> edges;
     Node** adjList;
     DS* ds;
 

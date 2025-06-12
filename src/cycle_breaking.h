@@ -16,10 +16,6 @@ struct Node{
     Node* next;
 };
 
-struct Edge{
-    int u, v, w;
-};
-
 // Disjoint Set
 struct DS {
     int parent, rank;
